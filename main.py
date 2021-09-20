@@ -4,6 +4,13 @@ import urllib.parse as urlparse
 import json
 import subprocess
 
+prepare_json = "{ \"transfer\": \"basic\", \"objects\": []}"
+
+example_json = "{ \"objects\": [{ \"oid\": \"1111111\", \"size\": 123, \"actions\": {\"download\": {\"href\": \"\",\"expires_in\": 3600}}}]}"
+
+answer_json = ""
+
+
 oid_file = {} # dict oid:file name
 # if new file added, dict should be updated by UpdatedDict
 
@@ -21,12 +28,9 @@ def UpdateDict(): # this function constructs a valid dict
         print(FileName)
         oid_file.update([(Oid, FileName)])
 
-def JsonAnswer(post_data): # this function constructs a json response file
-    f_prepare = open('prepare.json', 'r')
-    msg_prepare = f_prepare.read()
-    msg_prepare = json.loads(msg_prepare) # prepared answer construction
-    f_example = open('example.json', 'r')
-    msg_example = f_example.read()
+def JsonAnswer(post_data): # this function constructs a json response file 
+    msg_prepare = prepare_json
+    msg_example = example_json
     for i in post_data['objects']:
         if i['oid'] in oid_file:
             msg_prepare['objects'].append(dict(json.loads(msg_example)['objects'][0])) # adds a {...} object for a file we have
@@ -51,8 +55,8 @@ class HttpGetHandler(BaseHTTPRequestHandler):
         self.end_headers()
         print('Get answer:' + o.path[1:])
         with open(oid_file[o.path[1:]], 'rb') as file:
-            self.wfile.write(file.read())
-
+            self.wfile.write(file.read())    
+        
     def do_POST(self): # returns json where href url leads to a needed oid
         UpdateDict()
         print("WANT:")
